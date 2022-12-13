@@ -39610,17 +39610,26 @@ var Control = /*#__PURE__*/function (_GUI) {
     _this = _super.call(this);
     _this._data = {
       human: {
-        身高: 1.0,
+        身高: 1.7,
         臂展: 0.5,
-        性别: "F"
+        性别: "F",
+        FOV: 110,
+        IPD: 60
       },
       deck: {
         "Deck H": 1.5,
-        "Deck W": 2.0
+        "Deck Size": 2.0,
+        "Deck Aspect": 10,
+        "Deck Rotation": 15,
+        "Deck Distance": 1.5,
+        "Deck Bending": 0
       },
       dock: {
         "Dock H": 0.75,
-        "Dock Rotation": 15
+        "Dock Distance": 1.5,
+        "Dock Rotation": 15,
+        "Dock Size": 1,
+        "Dock Aspect": 10
       }
     };
     _this.addHumanParams();
@@ -39635,12 +39644,20 @@ var Control = /*#__PURE__*/function (_GUI) {
       _folder.add(this._data.human, "性别", ["F", "M"]);
       _folder.add(this._data.human, "身高", 1, 2, 0.1);
       _folder.add(this._data.human, "臂展", 0.5, 1, 0.1);
+      var _subfolder = _folder.addFolder("眼睛");
+      _subfolder.add(this._data.human, "FOV", 110, 120, 1);
+      _subfolder.add(this._data.human, "IPD", 55, 75, 1);
     }
   }, {
     key: "addDeckParams",
     value: function addDeckParams() {
       var _folder = this.addFolder("Deck 设计参数");
       _folder.add(this._data.deck, "Deck H", this._data.deck["Deck H"], 2.0, 0.1);
+      _folder.add(this._data.deck, "Deck Rotation", this._data.deck["Deck Rotation"], 2.0, 0.1);
+      _folder.add(this._data.deck, "Deck Distance", this._data.deck["Deck Distance"], 2.0, 0.1);
+      _folder.add(this._data.deck, "Deck Size", this._data.deck["Deck Size"], 2.0, 0.1);
+      _folder.add(this._data.deck, "Deck Aspect", this._data.deck["Deck Aspect"], 2.0, 0.1);
+      _folder.add(this._data.deck, "Deck Bending", 0, Math.PI / 180 * 30, Math.PI / 180);
     }
   }, {
     key: "addDockParams",
@@ -39648,6 +39665,9 @@ var Control = /*#__PURE__*/function (_GUI) {
       var _folder = this.addFolder("Dock 设计参数");
       _folder.add(this._data.dock, "Dock Rotation", 15, 45, 1);
       _folder.add(this._data.dock, "Dock H", 0.75, 1.5, 0.05);
+      _folder.add(this._data.dock, "Dock Distance", 1.5, 2, 0.1);
+      _folder.add(this._data.dock, "Dock Size", 1.5, 2, 0.1);
+      _folder.add(this._data.dock, "Dock Aspect", 10, 20, 1);
     }
   }]);
   return Control;
@@ -39666,6 +39686,76 @@ var Config = {
   }
 };
 exports.Config = Config;
+},{}],"main/bender.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Bender = void 0;
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+//MIT License
+//Copyright (c) 2020-2021 Sean Bradley
+//https://github.com/Sean-Bradley/Bender/blob/main/LICENSE
+var Bender = /*#__PURE__*/function () {
+  function Bender() {
+    _classCallCheck(this, Bender);
+  }
+  _createClass(Bender, [{
+    key: "bend",
+    value: function bend(geometry, axis, angle) {
+      var theta = 0;
+      if (angle !== 0) {
+        var v = new Array(geometry.position);
+        for (var i = 0; i < v.length; i += 3) {
+          var x = v[i];
+          var y = v[i + 1];
+          var z = v[i + 2];
+          switch (axis) {
+            case "x":
+              theta = z * angle;
+              break;
+            case "y":
+              theta = x * angle;
+              break;
+            default:
+              //z
+              theta = x * angle;
+              break;
+          }
+          var sinTheta = Math.sin(theta);
+          var cosTheta = Math.cos(theta);
+          switch (axis) {
+            case "x":
+              v[i] = x;
+              v[i + 1] = (y - 1.0 / angle) * cosTheta + 1.0 / angle;
+              v[i + 2] = -(y - 1.0 / angle) * sinTheta;
+              break;
+            case "y":
+              v[i] = -(z - 1.0 / angle) * sinTheta;
+              v[i + 1] = y;
+              v[i + 2] = (z - 1.0 / angle) * cosTheta + 1.0 / angle;
+              break;
+            default:
+              //z
+              v[i] = -(y - 1.0 / angle) * sinTheta;
+              v[i + 1] = (y - 1.0 / angle) * cosTheta + 1.0 / angle;
+              v[i + 2] = z;
+              break;
+          }
+        }
+        geometry.attributes.position.needsUpdate = true;
+      }
+    }
+  }]);
+  return Bender;
+}();
+exports.Bender = Bender;
 },{}],"main/main.js":[function(require,module,exports) {
 "use strict";
 
@@ -39675,6 +39765,7 @@ var _OrbitControls = require("three/examples/jsm/controls/OrbitControls");
 var _TrackballControls = require("three/examples/jsm/controls/TrackballControls");
 var _control = require("./control.js");
 var _config = require("./config.js");
+var _bender = require("./bender.js");
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -39683,6 +39774,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+var bender = new _bender.Bender();
 var XRScene = /*#__PURE__*/function () {
   function XRScene() {
     _classCallCheck(this, XRScene);
@@ -39807,6 +39899,12 @@ var XRScene = /*#__PURE__*/function () {
             case "Dock H":
               _this.models["Dock"].position.y = event.value;
               break;
+            case "Deck Bending":
+              var geo = _this.models["Deck"].geometry.clone();
+              bender.bend(geo, "y", event.value);
+              _this.models["Deck"].geometry.dispose();
+              _this.models["Deck"].geometry = geo;
+              break;
             default:
               console.error("Unbinded property ".concat(event.property));
               break;
@@ -39819,7 +39917,7 @@ var XRScene = /*#__PURE__*/function () {
 }();
 var xrscene = new XRScene();
 xrscene.animate();
-},{"three":"../node_modules/three/build/three.module.js","three/examples/jsm/geometries/BoxLineGeometry":"../node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/controls/TrackballControls":"../node_modules/three/examples/jsm/controls/TrackballControls.js","./control.js":"main/control.js","./config.js":"main/config.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"three":"../node_modules/three/build/three.module.js","three/examples/jsm/geometries/BoxLineGeometry":"../node_modules/three/examples/jsm/geometries/BoxLineGeometry.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","three/examples/jsm/controls/TrackballControls":"../node_modules/three/examples/jsm/controls/TrackballControls.js","./control.js":"main/control.js","./config.js":"main/config.js","./bender.js":"main/bender.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -39844,7 +39942,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62336" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57741" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
