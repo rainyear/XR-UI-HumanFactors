@@ -39632,7 +39632,7 @@ var Control = /*#__PURE__*/function (_GUI) {
         "Dock Distance": 0.75,
         "Dock Rotation": 15,
         "Dock Size": 1,
-        "Dock Aspect": 10
+        "Dock Aspect": 5
       }
     };
     _this.add(_this._data.ui, "Show Reach Envelope", true);
@@ -39670,8 +39670,8 @@ var Control = /*#__PURE__*/function (_GUI) {
       _folder.add(this._data.dock, "Dock Rotation", 15, 45, 1);
       _folder.add(this._data.dock, "Dock H", 0.75, 1.5, 0.05);
       _folder.add(this._data.dock, "Dock Distance", 0.75, 2, 0.1);
-      _folder.add(this._data.dock, "Dock Size", 1.5, 2, 0.1);
-      _folder.add(this._data.dock, "Dock Aspect", 10, 20, 1);
+      _folder.add(this._data.dock, "Dock Size", 1.0, 2, 0.1);
+      _folder.add(this._data.dock, "Dock Aspect", 5, 10, 1);
     }
   }]);
   return Control;
@@ -39897,7 +39897,10 @@ var XRScene = /*#__PURE__*/function () {
     }
   }, {
     key: "genDockGeo",
-    value: function genDockGeo() {}
+    value: function genDockGeo() {
+      var geo = new THREE.BoxGeometry(this.panel._data.dock["Dock Size"], this.panel._data.dock["Dock Size"] / this.panel._data.dock["Dock Aspect"], _config.Config.DOCK.depth);
+      return geo;
+    }
   }, {
     key: "addUIElements",
     value: function addUIElements() {
@@ -39933,7 +39936,7 @@ var XRScene = /*#__PURE__*/function () {
       this.scene.add(this.models["deck"]);
 
       // dock
-      var dockGeo = new THREE.BoxGeometry(_config.Config.DOCK.width, _config.Config.DOCK.height, _config.Config.DOCK.depth);
+      var dockGeo = this.genDockGeo();
       var dockMat = new THREE.MeshBasicMaterial({
         color: "black"
       });
@@ -40005,6 +40008,14 @@ var XRScene = /*#__PURE__*/function () {
           case "Dock Rotation":
             _this.models["dock"].rotation.x = event.value * Math.PI / 180;
             break;
+          case "Dock Size":
+          case "Dock Aspect":
+            var dockGeo = _this.genDockGeo();
+            _this.models["dock"].geometry.dispose();
+            _this.models["dock"].geometry = dockGeo;
+            break;
+
+          // reach envelope
           case "Show Reach Envelope":
             _this.models["reachLeft"].visible = event.value;
             _this.models["reachRight"].visible = event.value;
@@ -40061,7 +40072,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54945" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55736" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
